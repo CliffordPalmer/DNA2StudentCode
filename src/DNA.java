@@ -21,6 +21,7 @@ public class DNA {
         int maxSTR = 0;
         int currentCount = 0;
         long STRHash = hash(STR);
+        System.out.println(STRHash);
         long chunk = hash(sequence.substring(0, STR.length()));
         for(int i = 1; i < sequence.length() - STR.length(); i ++){
             if(chunk == STRHash) {
@@ -29,7 +30,8 @@ public class DNA {
                 currentCount ++;
             }
             else if(chunk != STRHash){
-                chunk = reHash(chunk, sequence.charAt(i + STR.length() - 1));
+                chunk = hash(sequence.substring(i, i + STR.length()));
+                       // reHash(chunk, sequence.charAt(i + STR.length() - 1));
                 if(currentCount > maxSTR){
                     maxSTR = currentCount;
                 }
@@ -43,21 +45,27 @@ public class DNA {
     }
 
     public static long hash(String STR){
-        long hash = 0;
-        // A = 1, C = 2, T = 3, G = 4
+        long hash = 1;
+        // A = 00, C = 01, T = 10, G = 11
         int length = STR.length();
         for(int i = 0; i < length; i++){
             if(Character.toUpperCase(STR.charAt(length - i - 1)) == 'A'){
-                hash += Math.pow(10, i);
+                hash <<= 2;
             }
             else if(Character.toUpperCase(STR.charAt(length - i - 1))  == 'C'){
-                hash += Math.pow(10, i) * 2;
+                hash <<= 2;
+                hash += 1;
             }
             else if(Character.toUpperCase(STR.charAt(length - i - 1)) == 'T'){
-                hash += Math.pow(10, i) * 3;
+                hash <<= 1;
+                hash += 1;
+                hash <<= 1;
             }
             else{
-                hash += Math.pow(10, i) * 4;
+                hash <<= 1;
+                hash += 1;
+                hash <<= 1;
+                hash += 1;
             }
         }
         return hash;
@@ -65,15 +73,22 @@ public class DNA {
     public static long reHash(long oldHash, char newChar){
         long hash = (oldHash % (int)Math.pow(10, String.valueOf(oldHash).length() - 1)) * 10;
         if(Character.toUpperCase(newChar) == 'A'){
-            return hash + 1;
+            return oldHash << 2;
         }
         else if(Character.toUpperCase(newChar) == 'C'){
-            return hash + 2;
+            return oldHash << 2 + 1;
         }
         else if(Character.toUpperCase(newChar) == 'T'){
+            hash <<= 1;
+            hash += 1;
+            hash <<= 1;
             return hash + 3;
         }
         else{
+            hash <<= 1;
+            hash += 1;
+            hash <<= 1;
+            hash +=1;
             return hash + 4;
         }
     }
