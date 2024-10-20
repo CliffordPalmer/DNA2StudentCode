@@ -14,14 +14,22 @@ import java.sql.SQLOutput;
 
 public class DNA {
 
+    private static int[] alphabetReference;
     /**
      * TODO: Complete this function, STRCount(), to return longest consecutive run of STR in sequence.
      */
     public static int STRCount(String sequence, String STR) {
+        alphabetReference = new int[256];
+        alphabetReference['A'] = 0;
+        alphabetReference['C'] = 1;
+        alphabetReference['T'] = 2;
+        alphabetReference['G'] = 3;
         int maxSTR = 0;
         int currentCount = 0;
         long STRHash = hash(STR);
-        System.out.println(STRHash);
+        System.out.println(hash("actg"));
+        System.out.println(hash("ctga"));
+        System.out.println(reHash(hash("actg"), "actg", 'C'));
         long chunk = hash(sequence.substring(0, STR.length()));
         for(int i = 1; i < sequence.length() - STR.length(); i ++){
             if(chunk == STRHash) {
@@ -30,7 +38,7 @@ public class DNA {
                 currentCount ++;
             }
             else if(chunk != STRHash){
-                chunk = hash(sequence.substring(i, i + STR.length()));
+//                chunk = reHash(chunk, sequence.charAt(i + STR.length() - 1));
                        // reHash(chunk, sequence.charAt(i + STR.length() - 1));
                 if(currentCount > maxSTR){
                     maxSTR = currentCount;
@@ -70,15 +78,16 @@ public class DNA {
         }
         return hash;
     }
-    public static long reHash(long oldHash, char newChar){
-        long hash = (oldHash % (int)Math.pow(10, String.valueOf(oldHash).length() - 1)) * 10;
-        if(Character.toUpperCase(newChar) == 'A'){
+    public static long reHash(long oldHash, String shortSequence, char newLetter){
+//        long hash = (oldHash % (int)Math.pow(4, String.valueOf(oldHash).length() - 1));
+        long hash = (oldHash) - alphabetReference[Character.toUpperCase(shortSequence.charAt(0))] << (shortSequence.length());
+        if(Character.toUpperCase(newLetter) == 'A'){
             return oldHash << 2;
         }
-        else if(Character.toUpperCase(newChar) == 'C'){
-            return oldHash << 2 + 1;
+        else if(Character.toUpperCase(newLetter) == 'C'){
+            return (oldHash << 2) + 1;
         }
-        else if(Character.toUpperCase(newChar) == 'T'){
+        else if(Character.toUpperCase(newLetter) == 'T'){
             hash <<= 1;
             hash += 1;
             hash <<= 1;
