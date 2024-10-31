@@ -19,6 +19,7 @@ public class DNA {
      * TODO: Complete this function, STRCount(), to return longest consecutive run of STR in sequence.
      */
     public static int STRCount(String sequence, String STR) {
+        // Map for constant time lookup of hash values
         alphabetReference = new int[256];
         alphabetReference['A'] = 0;
         alphabetReference['C'] = 1;
@@ -26,79 +27,58 @@ public class DNA {
         alphabetReference['G'] = 3;
         int maxSTR = 0;
         int currentCount = 0;
-        long STRHash = hash(STR);
-        System.out.println(hash("actg"));
-        System.out.println(hash("ctga"));
-        System.out.println(reHash(hash("actg"), "actg", 'C'));
-        long chunk = hash(sequence.substring(0, STR.length()));
-        for(int i = 1; i < sequence.length() - STR.length(); i ++){
-            if(chunk == STRHash) {
-                i += STR.length() - 1;
-                chunk = hash(sequence.substring(i, i + STR.length()));
+        int STRLength = STR.length();
+        int sequenceLength = sequence.length();
+        // Hash STR and first chunk of sequence
+        long STRHash = hash(STR, STRLength);
+        long hashedChunk = hash(sequence.substring(0, STRLength), STRLength);
+        // Loop through the rest of the sequence
+        for(int i = 1; i < sequenceLength - STRLength; i ++){
+            // If the chunk matches STR
+            if(hashedChunk == STRHash) {
+                // Skip forward by the length of STR - 1
+                i += STRLength - 1;
+                // Advance the chunk by 1 letter
+                hashedChunk = hash(sequence.substring(i, i + STRLength), STRLength);
+                // Add to the count
                 currentCount ++;
             }
-            else if(chunk != STRHash){
-//                chunk = reHash(chunk, sequence.charAt(i + STR.length() - 1));
-                       // reHash(chunk, sequence.charAt(i + STR.length() - 1));
+            // If the chunk doesn't match STR
+            else{
+                // Advance the chunk by 1 letter
+                hashedChunk = reHash(hashedChunk, sequence.charAt(i - 1), sequence.charAt(i + STRLength - 1), STRLength);
+                // If there's a new max, set it
                 if(currentCount > maxSTR){
                     maxSTR = currentCount;
                 }
+                // Reset the count
                 currentCount = 0;
             }
         }
+        // Handles the edge case where the very last part of the sequence is the largest repeat
         if(currentCount > maxSTR){
             maxSTR = currentCount + 1;
         }
         return maxSTR;
     }
 
-    public static long hash(String STR){
-        long hash = 1;
-        // A = 00, C = 01, T = 10, G = 11
-        int length = STR.length();
-        for(int i = 0; i < length; i++){
-            if(Character.toUpperCase(STR.charAt(length - i - 1)) == 'A'){
-                hash <<= 2;
-            }
-            else if(Character.toUpperCase(STR.charAt(length - i - 1))  == 'C'){
-                hash <<= 2;
-                hash += 1;
-            }
-            else if(Character.toUpperCase(STR.charAt(length - i - 1)) == 'T'){
-                hash <<= 1;
-                hash += 1;
-                hash <<= 1;
-            }
-            else{
-                hash <<= 1;
-                hash += 1;
-                hash <<= 1;
-                hash += 1;
-            }
+    // Hash function
+    public static long hash(String STR, int STRLength){
+        // Long to store hash, because hash might exceed Integer.MAX_VALUE
+        long hash = 0;
+        // Loop through sequence, hashing one letter at a time
+        for(int i = 0; i < STRLength; i++){
+            // Bit shifting for speed, equivalent to multiplying by a radix of 4
+            hash <<= 2;
+            hash += alphabetReference[Character.toUpperCase(STR.charAt(i))];
         }
         return hash;
     }
-    public static long reHash(long oldHash, String shortSequence, char newLetter){
-//        long hash = (oldHash % (int)Math.pow(4, String.valueOf(oldHash).length() - 1));
-        long hash = (oldHash) - alphabetReference[Character.toUpperCase(shortSequence.charAt(0))] << (shortSequence.length());
-        if(Character.toUpperCase(newLetter) == 'A'){
-            return oldHash << 2;
-        }
-        else if(Character.toUpperCase(newLetter) == 'C'){
-            return (oldHash << 2) + 1;
-        }
-        else if(Character.toUpperCase(newLetter) == 'T'){
-            hash <<= 1;
-            hash += 1;
-            hash <<= 1;
-            return hash + 3;
-        }
-        else{
-            hash <<= 1;
-            hash += 1;
-            hash <<= 1;
-            hash +=1;
-            return hash + 4;
-        }
+    // Method which creates a new hash by removing the first letter, and adding another
+    public static long reHash(long oldHash, char toRemove, char newLetter, int chunkLength){
+        // Subtract the value of the character being removed
+        long hash = oldHash - (alphabetReference[Character.toUpperCase(toRemove)] << (2 * (chunkLength - 1)));
+        // Then add the value of the new character, and return
+        return (hash << 2) + alphabetReference[newLetter];
     }
 }
